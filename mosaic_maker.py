@@ -3,13 +3,13 @@ import os
 import math
 
 # Configuration - these are the settings for our mosaic
-TARGET_WIDTH = 1000
-TARGET_HEIGHT = 1000
-TILES_WIDE = 100
+TARGET_WIDTH = 1080
+TARGET_HEIGHT = 1920
+TILES_WIDE = 50
 
 # File paths - where to find our images
 TILES_FOLDER = "tiles"
-TARGET_IMAGE = "images/Disco.png"
+TARGET_IMAGE = "images/target.jpg"
 OUTPUT_IMAGE = "output/mosaic.jpg"
 
 def color_distance(color1, color2):
@@ -41,24 +41,33 @@ def load_tiles(tiles_folder, tile_size):
     """Load all disco ball images and resize them"""
     print(f"Loading tiles from {tiles_folder}...")
     
+    # Handle both single size (square) and tuple (width, height)
+    if isinstance(tile_size, tuple):
+        tile_width, tile_height = tile_size
+    else:
+        tile_width = tile_height = tile_size
+    
     tiles = []
     tile_files = sorted(os.listdir(tiles_folder))
     
     for filename in tile_files:
         if filename.endswith('.png') or filename.endswith('.jpg'):
-            filepath = os.path.join(tiles_folder, filename)
-            tile_image = Image.open(filepath)
-            tile_image = tile_image.resize((tile_size, tile_size))
-            
-            avg_color = get_average_color(tile_image)
-            
-            tiles.append({
-                'image': tile_image,
-                'avg_color': avg_color,
-                'filename': filename
-            })
-            
-            print(f"  Loaded {filename} - avg color: {avg_color}")
+            try:
+                filepath = os.path.join(tiles_folder, filename)
+                tile_image = Image.open(filepath)
+                tile_image = tile_image.resize((tile_width, tile_height), Image.Resampling.LANCZOS)
+                
+                avg_color = get_average_color(tile_image)
+                
+                tiles.append({
+                    'image': tile_image,
+                    'avg_color': avg_color,
+                    'filename': filename
+                })
+                
+                print(f"  Loaded {filename} - avg color: ({int(avg_color[0])}, {int(avg_color[1])}, {int(avg_color[2])})")
+            except Exception as e:
+                print(f"  Skipping {filename} - couldn't load: {e}")
     
     print(f"Loaded {len(tiles)} tiles total")
     return tiles
@@ -145,3 +154,4 @@ if __name__ == "__main__":
     print("Your mosaic is ready!")
     print(f"Check the {OUTPUT_IMAGE} file")
     print("="*50)
+    
